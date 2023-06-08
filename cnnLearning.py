@@ -5,8 +5,10 @@ from keras.preprocessing.image import ImageDataGenerator
 import time
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
 
 import os
 from glob import glob
@@ -37,7 +39,7 @@ def evaluate_model(trainX, trainY, testX, testY):
     
     model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, verbose=verbose)
     _, accuracy = model.evaluate(testX, testY, batch_size=batch_size, verbose=verbose)
-    return accuracy
+    return model, accuracy
 
 X = []
 yVal = []
@@ -52,4 +54,11 @@ y = one_hot(yVal)
 X = np.array(X)
 trainX, testX, trainY, testY = train_test_split(X, y, test_size=0.2, random_state=42)
 
-accuracy = evaluate_model(trainX, trainY, testX, testY)
+model, accuracy = evaluate_model(trainX, trainY, testX, testY)
+
+pred = model.predict(testX)
+predY = [float(np.unique(yVal)[np.argmax(idx)]) for idx in pred]
+testYVals = [float(np.unique(yVal)[np.argmax(idx)]) for idx in testY]
+conf = confusion_matrix(testYVals, predY)
+
+sns.heatmap(conf, annot=True)
